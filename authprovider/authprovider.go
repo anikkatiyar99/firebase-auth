@@ -1,4 +1,4 @@
-package main
+package authprovider
 
 // AuthProvider defines the functions an auth implemention must support.
 type AuthProvider interface {

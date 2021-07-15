@@ -1,4 +1,4 @@
-package main
+package authprovider
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 
 	fbase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/auth"
+	authprovider "github.com/anikkatiyar99/firebase-auth/authprovider"
 )
 
 // FirebaseAuth implements AuthProvider interface.
@@ -38,7 +39,7 @@ func NewFirebaseAuth() (*FirebaseAuth, error) {
 }
 
 // VerifyToken checks the given ID Token.
-func (f *FirebaseAuth) VerifyToken(idToken string) (TokenProvider, error) {
+func (f *FirebaseAuth) VerifyToken(idToken string) (authprovider.Token, error) {
 	token, err := f.client.VerifyIDToken(context.Background(), idToken)
 	if err != nil {
 		return nil, err

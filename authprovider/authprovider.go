@@ -9,7 +9,7 @@ type AuthProvider interface {
 }
 
 // Token defines the functions an auth token implementation must support.
-type TokenProvider interface {
+type Token interface {
 	// GetRole returns the custom claim "role" specified in the token.
 	// If the claim is not present in the token, GetRole returns empty string.
 	GetRole() string

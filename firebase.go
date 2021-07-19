@@ -1,12 +1,12 @@
-package authprovider
+package auth
 
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	fbase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/auth"
-	authprovider "github.com/anikkatiyar99/firebase-auth/authprovider"
 )
 
 // FirebaseAuth implements AuthProvider interface.
@@ -15,8 +15,18 @@ type FirebaseAuth struct {
 }
 
 // Token implements TokenProvider interface.
-type Token struct {
+type FirebaseToken struct {
 	token *auth.Token
+}
+
+// remove finds a string & removes it from the array (Used to Unset roles)
+func remove(s []string, r string) []string {
+	for i, v := range s {
+		if v == r {
+			return append(s[:i], s[i+1:]...)
+		}
+	}
+	return s
 }
 
 // NewFirebaseAuth is the factory function to create a new FirebaseAuth.
@@ -39,17 +49,17 @@ func NewFirebaseAuth() (*FirebaseAuth, error) {
 }
 
 // VerifyToken checks the given ID Token.
-func (f *FirebaseAuth) VerifyToken(idToken string) (authprovider.Token, error) {
+func (f *FirebaseAuth) VerifyToken(idToken string) (Token, error) {
 	token, err := f.client.VerifyIDToken(context.Background(), idToken)
 	if err != nil {
 		return nil, err
 	}
-	ftoken := &Token{token: token}
+	ftoken := &FirebaseToken{token: token}
 	return ftoken, nil
 }
 
-// SetCustomClaims sets a given role to the given uid using custom claims.
-func (f *FirebaseAuth) SetCustomClaims(uid string, role string) error {
+// SetRoles sets a given role to the given uid using custom claims.
+func (f *FirebaseAuth) SetRoles(uid string, role []string) error {
 	var claims map[string]interface{}
 	claims = make(map[string]interface{}, 1)
 	claims["role"] = role
@@ -58,19 +68,70 @@ func (f *FirebaseAuth) SetCustomClaims(uid string, role string) error {
 	return err
 }
 
-// GetRole returns the custom claim "role" specified in the token.
-// If the claim is not present in the token, GetRole returns empty string.
-func (t *Token) GetRole() string {
-	role, ok := t.token.Claims["role"]
-	if !ok {
-		return ""
+// AddRoles sets a given role to the given uid using custom claims.
+func (f *FirebaseAuth) AddRoles(uid string, role string) error {
+
+	// Retreive user details from uid
+	user, err := f.client.GetUser(context.Background(), uid)
+	if err != nil {
+		return err
+	}
+	// Convert claim []interface to []string
+	old_claim := make([]string, len(user.CustomClaims))
+	for i, v := range old_claim {
+		old_claim[i] = fmt.Sprint(v)
 	}
 
-	return role.(string)
+	// Remove the role from the []string of roles
+	updated_roles := append(old_claim, role)
+
+	// Convert new_claim string[] to []interface
+	new_claim := make(map[string]interface{}, 1)
+	new_claim["role"] = updated_roles
+
+	err = f.client.SetCustomUserClaims(context.Background(), uid, new_claim)
+	return err
+}
+
+// UnsetRoles sets a given role to the given uid using custom claims.
+func (f *FirebaseAuth) UnsetRoles(uid string, role string) error {
+
+	// Retreive user details from uid
+	user, err := f.client.GetUser(context.Background(), uid)
+	if err != nil {
+		return err
+	}
+
+	// Convert claim []interface to []string
+	old_claim := make([]string, len(user.CustomClaims))
+	for i, v := range old_claim {
+		old_claim[i] = fmt.Sprint(v)
+	}
+
+	// Remove the role from the []string of roles
+	updated_roles := remove(old_claim, role)
+
+	// Convert new_claim string[] to []interface
+	new_claim := make(map[string]interface{}, 1)
+	new_claim["role"] = updated_roles
+
+	err = f.client.SetCustomUserClaims(context.Background(), uid, new_claim)
+	return err
+}
+
+// GetRoles returns the custom claim "role" specified in the token.
+// If the claim is not present in the token, GetRole returns empty string.
+func (t *FirebaseToken) GetRoles() ([]string, bool) {
+	role, ok := t.token.Claims["role"]
+	if !ok {
+		return nil, !ok
+	}
+
+	return role.([]string), ok
 }
 
 // GetUID returns the UID of a given token.
-func (t *Token) GetUID() (string, error) {
+func (t *FirebaseToken) GetUID() (string, error) {
 	if t.token == nil {
 		return "", errors.New("Auth token not initialized")
 	}

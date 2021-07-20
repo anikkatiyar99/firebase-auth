@@ -68,8 +68,8 @@ func (f *FirebaseAuth) SetRoles(uid string, role []string) error {
 	return err
 }
 
-// AddRoles sets a given role to the given uid using custom claims.
-func (f *FirebaseAuth) AddRoles(uid string, role string) error {
+// AddRole adds a given role to the given uid using custom claims.
+func (f *FirebaseAuth) AddRole(uid string, role string) error {
 
 	// Retreive user details from uid
 	user, err := f.client.GetUser(context.Background(), uid)
@@ -82,7 +82,7 @@ func (f *FirebaseAuth) AddRoles(uid string, role string) error {
 		old_claim[i] = fmt.Sprint(v)
 	}
 
-	// Remove the role from the []string of roles
+	// Append the new role to the []string of roles
 	updated_roles := append(old_claim, role)
 
 	// Convert new_claim string[] to []interface

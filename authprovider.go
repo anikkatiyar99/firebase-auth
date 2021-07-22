@@ -6,11 +6,11 @@ type AuthProvider interface {
 	CreateUser(Email string, DisplayName string) (string, error)
 	// VerifyToken checks if the token is valid.
 	VerifyToken(token string) (Token, error)
-	// SetRoles sets a given role to the given uid.
+	// SetRoles sets given roles to the given uid.
 	SetRoles(uid string, role []string) error
-	// UnsetRoles unsets a given roles to the given uid.
+	// UnsetRoles unsets given roles to the given uid.
 	UnsetRoles(uid string, role string) error
-	// AddRoles adds a given roles to the existing roles list to the given uid.
+	// AddRoles adds given roles to the existing roles list to the given uid.
 	AddRoles(uid string, role string) error
 }
 

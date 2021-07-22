@@ -86,7 +86,7 @@ func (f *FirebaseAuth) VerifyToken(idToken string) (Token, error) {
 	return ftoken, nil
 }
 
-// SetRoles sets a given role to the given uid using custom claims.
+// SetRoles sets given roles to the given uid using custom claims.
 func (f *FirebaseAuth) SetRoles(uid string, role []string) error {
 	claims := make(map[string]interface{}, 1)
 	claims["role"] = role
@@ -95,7 +95,7 @@ func (f *FirebaseAuth) SetRoles(uid string, role []string) error {
 	return err
 }
 
-// AddRoles adds a given role to the given uid using custom claims.
+// AddRoles adds given roles to the given uid using custom claims.
 func (f *FirebaseAuth) AddRoles(uid string, role []string) error {
 
 	// Retreive user details from uid
@@ -106,7 +106,7 @@ func (f *FirebaseAuth) AddRoles(uid string, role []string) error {
 
 	old_claim := user.CustomClaims["role"].([]string)
 
-	// Append the new role to the []string of roles
+	// Append the new roles to the []string of roles
 	updated_roles := append(old_claim, role...)
 
 	// Push the updated roles in new claim
@@ -117,7 +117,7 @@ func (f *FirebaseAuth) AddRoles(uid string, role []string) error {
 	return err
 }
 
-// UnsetRoles sets a given role to the given uid using custom claims.
+// UnsetRoles sets given roles to the given uid using custom claims.
 func (f *FirebaseAuth) UnsetRoles(uid string, role []string) error {
 
 	// Retreive user details from uid
@@ -128,8 +128,8 @@ func (f *FirebaseAuth) UnsetRoles(uid string, role []string) error {
 
 	old_claim := user.CustomClaims["role"].([]string)
 
-	// Remove the role from the []string of roles
-	for _, v := range old_claim {
+	// Removes the role from the []string of roles
+	for _, v := range role {
 		remove(old_claim, v)
 	}
 

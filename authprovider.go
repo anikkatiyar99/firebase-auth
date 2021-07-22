@@ -9,9 +9,9 @@ type AuthProvider interface {
 	// SetRoles sets given roles to the given uid.
 	SetRoles(uid string, role []string) error
 	// UnsetRoles unsets given roles to the given uid.
-	UnsetRoles(uid string, role string) error
+	UnsetRoles(uid string, role []string) error
 	// AddRoles adds given roles to the existing roles list to the given uid.
-	AddRoles(uid string, role string) error
+	AddRoles(uid string, role []string) error
 }
 
 // Token defines the functions an auth token implementation must support.

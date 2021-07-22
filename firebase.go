@@ -86,7 +86,7 @@ func (f *FirebaseAuth) VerifyToken(idToken string) (Token, error) {
 	return ftoken, nil
 }
 
-// SetRoles sets given roles to the given uid using custom claims.
+// SetRoles sets given roles for the given uid using custom claims.
 func (f *FirebaseAuth) SetRoles(uid string, role []string) error {
 	claims := make(map[string]interface{}, 1)
 	claims["role"] = role
@@ -95,7 +95,7 @@ func (f *FirebaseAuth) SetRoles(uid string, role []string) error {
 	return err
 }
 
-// AddRoles adds given roles to the given uid using custom claims.
+// AddRoles adds given roles for the given uid using custom claims.
 func (f *FirebaseAuth) AddRoles(uid string, role []string) error {
 
 	// Retreive user details from uid
@@ -103,7 +103,6 @@ func (f *FirebaseAuth) AddRoles(uid string, role []string) error {
 	if err != nil {
 		return err
 	}
-
 	old_claim := user.CustomClaims["role"].([]string)
 
 	// Append the new roles to the []string of roles
@@ -113,11 +112,18 @@ func (f *FirebaseAuth) AddRoles(uid string, role []string) error {
 	new_claim := make(map[string]interface{}, 1)
 	new_claim["role"] = updated_roles
 
-	err = f.client.SetCustomUserClaims(context.Background(), uid, new_claim)
+	params := (&auth.UserToUpdate{}).
+		CustomClaims(new_claim)
+
+	_, err = f.client.UpdateUser(context.Background(), uid, params)
+	if err != nil {
+		return err
+	}
+
 	return err
 }
 
-// UnsetRoles unsets given roles to the given uid using custom claims.
+// UnsetRoles unsets given roles for the given uid using custom claims.
 func (f *FirebaseAuth) UnsetRoles(uid string, role []string) error {
 
 	// Retreive user details from uid
@@ -128,7 +134,7 @@ func (f *FirebaseAuth) UnsetRoles(uid string, role []string) error {
 
 	old_claim := user.CustomClaims["role"].([]string)
 
-	// Removes the role from the []string of existing roles
+	// Removes the roles from the []string of existing roles
 	for _, v := range role {
 		remove(old_claim, v)
 	}
@@ -137,7 +143,14 @@ func (f *FirebaseAuth) UnsetRoles(uid string, role []string) error {
 	new_claim := make(map[string]interface{}, 1)
 	new_claim["role"] = old_claim
 
-	err = f.client.SetCustomUserClaims(context.Background(), uid, new_claim)
+	params := (&auth.UserToUpdate{}).
+		CustomClaims(new_claim)
+
+	_, err = f.client.UpdateUser(context.Background(), uid, params)
+	if err != nil {
+		return err
+	}
+
 	return err
 }
 

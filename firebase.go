@@ -128,7 +128,7 @@ func (f *FirebaseAuth) UnsetRoles(uid string, role []string) error {
 
 	old_claim := user.CustomClaims["role"].([]string)
 
-	// Removes the role from the []string of roles
+	// Removes the role from the []string of existing roles
 	for _, v := range role {
 		remove(old_claim, v)
 	}

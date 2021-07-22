@@ -109,7 +109,7 @@ func (f *FirebaseAuth) AddRoles(uid string, role []string) error {
 	// Append the new role to the []string of roles
 	updated_roles := append(old_claim, role...)
 
-	// Convert new_claim string[] to []interface
+	// Push the updated roles in new claim
 	new_claim := make(map[string]interface{}, 1)
 	new_claim["role"] = updated_roles
 
@@ -133,7 +133,7 @@ func (f *FirebaseAuth) UnsetRoles(uid string, role []string) error {
 		remove(old_claim, v)
 	}
 
-	// Convert new_claim string[] to []interface
+	// Push the updated roles in new claim
 	new_claim := make(map[string]interface{}, 1)
 	new_claim["role"] = old_claim
 

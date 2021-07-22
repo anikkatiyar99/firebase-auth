@@ -117,7 +117,7 @@ func (f *FirebaseAuth) AddRoles(uid string, role []string) error {
 	return err
 }
 
-// UnsetRoles sets given roles to the given uid using custom claims.
+// UnsetRoles unsets given roles to the given uid using custom claims.
 func (f *FirebaseAuth) UnsetRoles(uid string, role []string) error {
 
 	// Retreive user details from uid

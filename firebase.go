@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	fbase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/auth"
@@ -17,6 +16,15 @@ type FirebaseAuth struct {
 // Token implements TokenProvider interface.
 type FirebaseToken struct {
 	token *auth.Token
+}
+
+// getFirebaseUserByEmail return the unique id from firebase if user exists on firebase database.
+func (f *FirebaseAuth) getFirebaseUserByEmail(email string) string {
+	userByEmail, err := f.client.GetUserByEmail(context.Background(), email)
+	if err != nil {
+		return ""
+	}
+	return userByEmail.UID
 }
 
 // remove finds a string & removes it from the array (Used to Unset roles)
@@ -48,6 +56,26 @@ func NewFirebaseAuth() (*FirebaseAuth, error) {
 	return f, nil
 }
 
+// CreateUser for creating user on firebase while user will be created by admin
+func (f *FirebaseAuth) CreateUser(Email string, DisplayName string) (string, error) {
+	// Check if user already exists in firebase db.
+	uid := f.getFirebaseUserByEmail(Email)
+	if uid != "" {
+		return "", errors.New("email already exists")
+	}
+
+	// Create user in firebase.
+	params := (&auth.UserToCreate{}).
+		Email(Email).
+		EmailVerified(false).
+		DisplayName(DisplayName)
+	u, err := f.client.CreateUser(context.Background(), params)
+	if err != nil {
+		return "", err
+	}
+	return u.UID, nil
+}
+
 // VerifyToken checks the given ID Token.
 func (f *FirebaseAuth) VerifyToken(idToken string) (Token, error) {
 	token, err := f.client.VerifyIDToken(context.Background(), idToken)
@@ -60,30 +88,26 @@ func (f *FirebaseAuth) VerifyToken(idToken string) (Token, error) {
 
 // SetRoles sets a given role to the given uid using custom claims.
 func (f *FirebaseAuth) SetRoles(uid string, role []string) error {
-	var claims map[string]interface{}
-	claims = make(map[string]interface{}, 1)
+	claims := make(map[string]interface{}, 1)
 	claims["role"] = role
 
 	err := f.client.SetCustomUserClaims(context.Background(), uid, claims)
 	return err
 }
 
-// AddRole adds a given role to the given uid using custom claims.
-func (f *FirebaseAuth) AddRole(uid string, role string) error {
+// AddRoles adds a given role to the given uid using custom claims.
+func (f *FirebaseAuth) AddRoles(uid string, role []string) error {
 
 	// Retreive user details from uid
 	user, err := f.client.GetUser(context.Background(), uid)
 	if err != nil {
 		return err
 	}
-	// Convert claim []interface to []string
-	old_claim := make([]string, len(user.CustomClaims))
-	for i, v := range old_claim {
-		old_claim[i] = fmt.Sprint(v)
-	}
+
+	old_claim := user.CustomClaims["role"].([]string)
 
 	// Append the new role to the []string of roles
-	updated_roles := append(old_claim, role)
+	updated_roles := append(old_claim, role...)
 
 	// Convert new_claim string[] to []interface
 	new_claim := make(map[string]interface{}, 1)
@@ -94,7 +118,7 @@ func (f *FirebaseAuth) AddRole(uid string, role string) error {
 }
 
 // UnsetRoles sets a given role to the given uid using custom claims.
-func (f *FirebaseAuth) UnsetRoles(uid string, role string) error {
+func (f *FirebaseAuth) UnsetRoles(uid string, role []string) error {
 
 	// Retreive user details from uid
 	user, err := f.client.GetUser(context.Background(), uid)
@@ -102,18 +126,16 @@ func (f *FirebaseAuth) UnsetRoles(uid string, role string) error {
 		return err
 	}
 
-	// Convert claim []interface to []string
-	old_claim := make([]string, len(user.CustomClaims))
-	for i, v := range old_claim {
-		old_claim[i] = fmt.Sprint(v)
-	}
+	old_claim := user.CustomClaims["role"].([]string)
 
 	// Remove the role from the []string of roles
-	updated_roles := remove(old_claim, role)
+	for _, v := range old_claim {
+		remove(old_claim, v)
+	}
 
 	// Convert new_claim string[] to []interface
 	new_claim := make(map[string]interface{}, 1)
-	new_claim["role"] = updated_roles
+	new_claim["role"] = old_claim
 
 	err = f.client.SetCustomUserClaims(context.Background(), uid, new_claim)
 	return err
@@ -133,7 +155,7 @@ func (t *FirebaseToken) GetRoles() ([]string, bool) {
 // GetUID returns the UID of a given token.
 func (t *FirebaseToken) GetUID() (string, error) {
 	if t.token == nil {
-		return "", errors.New("Auth token not initialized")
+		return "", errors.New("auth token not initialized")
 	}
 
 	return t.token.UID, nil

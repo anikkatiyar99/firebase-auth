@@ -2,14 +2,16 @@ package auth
 
 // AuthProvider defines the functions an auth implemention must support.
 type AuthProvider interface {
+	// CreateUser creates a user in underlying auth provider system and returns the UID and error.
+	CreateUser(Email string, DisplayName string) (string, error)
 	// VerifyToken checks if the token is valid.
 	VerifyToken(token string) (Token, error)
 	// SetRoles sets a given role to the given uid.
 	SetRoles(uid string, role []string) error
-	// UnsetRoles unsets a given role to the given uid.
-	UnsetRole(uid string, role string) error
-	// AddRoles adds a given role to the existing roles list to the given uid.
-	AddRole(uid string, role string) error
+	// UnsetRoles unsets a given roles to the given uid.
+	UnsetRoles(uid string, role string) error
+	// AddRoles adds a given roles to the existing roles list to the given uid.
+	AddRoles(uid string, role string) error
 }
 
 // Token defines the functions an auth token implementation must support.

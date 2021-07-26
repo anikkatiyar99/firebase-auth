@@ -57,7 +57,7 @@ func NewFirebaseAuth() (*FirebaseAuth, error) {
 }
 
 // CreateUser for creating user on firebase while user will be created by admin
-func (f *FirebaseAuth) CreateUser(Email string, DisplayName string) (string, error) {
+func (f *FirebaseAuth) CreateUser(Email string, DisplayName string, Password string) (string, error) {
 	// Check if user already exists in firebase db.
 	uid := f.getFirebaseUserByEmail(Email)
 	if uid != "" {
@@ -68,7 +68,8 @@ func (f *FirebaseAuth) CreateUser(Email string, DisplayName string) (string, err
 	params := (&auth.UserToCreate{}).
 		Email(Email).
 		EmailVerified(false).
-		DisplayName(DisplayName)
+		DisplayName(DisplayName).
+		Password(Password)
 	u, err := f.client.CreateUser(context.Background(), params)
 	if err != nil {
 		return "", err
